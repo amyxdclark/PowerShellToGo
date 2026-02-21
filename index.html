@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ── Character Encoding & Viewport ── -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+  <!-- ── Primary Meta Tags ── -->
+  <title>PowerShell To Go</title>
+  <meta name="title"       content="PowerShell To Go" />
+  <meta name="description" content="A portable PowerShell terminal for your mobile device" />
+  <meta name="author"      content="PowerShell To Go" />
+  <meta name="keywords"    content="PowerShell, terminal, PWA, mobile, CLI, shell" />
+
+  <!-- ── PWA / Theme ── -->
+  <meta name="theme-color"                content="#012456" />
+  <meta name="theme-color"                content="#012456" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color"                content="#0066cc" media="(prefers-color-scheme: light)" />
+  <meta name="mobile-web-app-capable"     content="yes" />
+  <meta name="application-name"           content="PSToGo" />
+
+  <!-- ── Apple PWA Tags ── -->
+  <meta name="apple-mobile-web-app-capable"           content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style"  content="black-translucent" />
+  <meta name="apple-mobile-web-app-title"             content="PSToGo" />
+  <link rel="apple-touch-icon"  href="icon.svg" />
+  <link rel="apple-touch-icon"  sizes="192x192" href="icon.svg" />
+  <link rel="apple-touch-icon"  sizes="512x512" href="icon.svg" />
+
+  <!-- ── Microsoft Tile ── -->
+  <meta name="msapplication-TileColor"   content="#012456" />
+  <meta name="msapplication-TileImage"   content="icon.svg" />
+  <meta name="msapplication-config"      content="none" />
+
+  <!-- ── Open Graph ── -->
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="PowerShell To Go" />
+  <meta property="og:description" content="A portable PowerShell terminal for your mobile device" />
+  <meta property="og:image"       content="icon.svg" />
+
+  <!-- ── Web App Manifest ── -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- ── Favicon ── -->
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+
+  <!-- ── Styles ── -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+<!-- ════════════════════════════════════════════
+     APP SHELL
+═════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ── Install Banner ────────────────────────── -->
+  <div id="install-banner" role="banner" aria-label="Install app">
+    <span class="banner-text">
+      <strong>Install PowerShell To Go</strong> – add to your home screen for offline use
+    </span>
+    <button id="install-btn" aria-label="Install app">Install</button>
+    <button id="install-dismiss" aria-label="Dismiss install banner">&times;</button>
+  </div>
+
+  <!-- ── Header ────────────────────────────────── -->
+  <header id="header" role="banner">
+    <div id="header-title" aria-label="PowerShell To Go terminal">
+      <span class="ps-icon" aria-hidden="true">⚡</span>
+      <span class="title-text">PowerShell To Go</span>
+    </div>
+    <div id="header-actions">
+      <button id="btn-clear" class="icon-btn" title="Clear screen (cls)" aria-label="Clear terminal">
+        🗑️
+      </button>
+      <button id="btn-help" class="icon-btn" title="Help" aria-label="Open help">
+        ❓
+      </button>
+      <button id="btn-settings" class="icon-btn" title="Settings" aria-label="Open settings">
+        ⚙️
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Toolbar ───────────────────────────────── -->
+  <nav id="toolbar" role="toolbar" aria-label="Quick commands">
+    <button class="toolbar-btn" data-cmd="ls" data-run="true"        title="List directory contents">
+      <span class="btn-icon">📁</span> ls
+    </button>
+    <button class="toolbar-btn" data-cmd="cd "                        title="Change directory – type path after cd">
+      <span class="btn-icon">📂</span> cd
+    </button>
+    <button class="toolbar-btn" data-cmd="cat "                       title="Read file content">
+      <span class="btn-icon">📄</span> cat
+    </button>
+    <button class="toolbar-btn" data-cmd="Get-Date" data-run="true"   title="Show current date/time">
+      <span class="btn-icon">📅</span> date
+    </button>
+    <button class="toolbar-btn" data-cmd="Get-Process" data-run="true" title="Show running processes">
+      <span class="btn-icon">⚙️</span> ps
+    </button>
+    <button class="toolbar-btn" data-cmd="Get-History" data-run="true" title="Show command history">
+      <span class="btn-icon">📜</span> history
+    </button>
+    <button class="toolbar-btn" data-cmd="Get-Variable" data-run="true" title="Show variables">
+      <span class="btn-icon">$</span> vars
+    </button>
+    <button class="toolbar-btn" data-cmd="Get-Help" data-run="true"   title="Show help">
+      <span class="btn-icon">❓</span> help
+    </button>
+    <button class="toolbar-btn" data-cmd="pwd" data-run="true"        title="Show current directory">
+      <span class="btn-icon">📍</span> pwd
+    </button>
+    <button class="toolbar-btn" data-cmd="cls" data-run="true"        title="Clear the terminal">
+      <span class="btn-icon">🧹</span> cls
+    </button>
+  </nav>
+
+  <!-- ── Terminal Output ───────────────────────── -->
+  <main id="output-wrapper" role="main" aria-label="Terminal output">
+    <div id="output"
+         role="log"
+         aria-live="polite"
+         aria-label="Terminal output"
+         aria-atomic="false">
+    </div>
+
+    <!-- Scroll-to-bottom button -->
+    <button id="scroll-btn" title="Scroll to bottom" aria-label="Scroll to bottom">▼</button>
+  </main>
+
+  <!-- ── Tab-completion Suggestions ───────────────── -->
+  <div id="suggestions"
+       role="listbox"
+       aria-label="Command completions">
+  </div>
+
+  <!-- ── Input Area ────────────────────────────── -->
+  <div id="input-area">
+    <label id="input-prompt-label"
+           for="cmd-input"
+           aria-label="Command prompt">PS &gt;</label>
+    <input id="cmd-input"
+           type="text"
+           inputmode="text"
+           autocomplete="off"
+           autocorrect="off"
+           autocapitalize="off"
+           spellcheck="false"
+           placeholder="Enter command…"
+           aria-label="PowerShell command input"
+           aria-autocomplete="list"
+           aria-controls="suggestions"
+           role="combobox"
+           aria-expanded="false" />
+    <button id="run-btn" aria-label="Run command" title="Run (Enter)">▶</button>
+  </div>
+
+</div><!-- #app -->
+
+
+<!-- ════════════════════════════════════════════
+     SETTINGS PANEL (slide-up sheet)
+═════════════════════════════════════════════ -->
+<div id="settings-overlay" role="dialog" aria-modal="true" aria-label="Settings">
+  <div id="settings-panel">
+    <h2>⚙️ Settings</h2>
+
+    <!-- Appearance -->
+    <section class="settings-section">
+      <h3>Appearance</h3>
+
+      <div class="settings-row">
+        <div>
+          <label for="theme-toggle">Light Theme</label>
+          <div class="row-desc">Toggle between dark PS-blue and light mode</div>
+        </div>
+        <label class="toggle" aria-label="Toggle light theme">
+          <input id="theme-toggle" type="checkbox" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <label for="font-size-slider">Font Size
+            <span id="font-size-val" style="font-size:11px;color:var(--text-muted);margin-left:6px;"></span>
+          </label>
+          <div class="row-desc">Terminal output font size</div>
+        </div>
+        <input id="font-size-slider"
+               type="range"
+               class="range-input"
+               min="10" max="22" step="1"
+               aria-label="Font size" />
+      </div>
+    </section>
+
+    <!-- Data Management -->
+    <section class="settings-section">
+      <h3>Data</h3>
+      <div class="settings-actions">
+        <button id="btn-export"        class="settings-action-btn">📦 Export Session</button>
+        <button id="btn-clear-history" class="settings-action-btn">🗑️ Clear History</button>
+        <button id="btn-reset-fs"      class="settings-action-btn danger">⚠️ Reset Filesystem</button>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section class="settings-section">
+      <h3>About</h3>
+      <div class="settings-row">
+        <div>
+          <label>Version</label>
+          <div class="row-desc">PowerShell To Go v1.0.0</div>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div>
+          <label>Runtime</label>
+          <div class="row-desc">Client-side JavaScript interpreter – no server required</div>
+        </div>
+      </div>
+      <div class="settings-row">
+        <div>
+          <label>Storage</label>
+          <div class="row-desc">Filesystem and settings persisted to localStorage</div>
+        </div>
+      </div>
+    </section>
+
+    <button id="settings-close" class="settings-action-btn" style="width:100%;margin-top:4px;">
+      ✕ Close
+    </button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     HELP MODAL
+═════════════════════════════════════════════ -->
+<div id="help-overlay" role="dialog" aria-modal="true" aria-label="Help">
+  <div id="help-panel">
+    <h2>
+      ❓ Quick Reference
+      <button id="help-close" class="icon-btn" aria-label="Close help" style="font-size:16px;">✕</button>
+    </h2>
+
+    <section class="help-section">
+      <h3>Navigation</h3>
+      <table class="help-table"><tbody>
+        <tr><td>ls / Get-ChildItem</td><td>List directory contents</td></tr>
+        <tr><td>cd &lt;path&gt;</td>          <td>Change directory</td></tr>
+        <tr><td>pwd</td>              <td>Print working directory</td></tr>
+        <tr><td>cd ..</td>            <td>Go up one level</td></tr>
+        <tr><td>cd ~</td>             <td>Go to home directory</td></tr>
+      </tbody></table>
+    </section>
+
+    <section class="help-section">
+      <h3>File Operations</h3>
+      <table class="help-table"><tbody>
+        <tr><td>cat &lt;file&gt;</td>         <td>Read a file</td></tr>
+        <tr><td>ni &lt;file&gt;</td>          <td>Create new file</td></tr>
+        <tr><td>ni -ItemType Directory &lt;name&gt;</td><td>Create folder</td></tr>
+        <tr><td>sc &lt;file&gt; "text"</td>  <td>Write to file</td></tr>
+        <tr><td>ac &lt;file&gt; "text"</td>  <td>Append to file</td></tr>
+        <tr><td>rm &lt;file&gt;</td>          <td>Delete file</td></tr>
+        <tr><td>cp &lt;src&gt; &lt;dst&gt;</td><td>Copy item</td></tr>
+        <tr><td>mv &lt;src&gt; &lt;dst&gt;</td><td>Move/rename item</td></tr>
+        <tr><td>Test-Path &lt;path&gt;</td>   <td>Check if path exists</td></tr>
+      </tbody></table>
+    </section>
+
+    <section class="help-section">
+      <h3>Pipeline Examples</h3>
+      <table class="help-table"><tbody>
+        <tr><td>ls | Where-Object { $_.type -eq "file" }</td><td></td></tr>
+        <tr><td>Get-Process | Sort-Object -Property CPU</td><td></td></tr>
+        <tr><td>Get-Process | Measure-Object -Property CPU -Sum</td><td></td></tr>
+        <tr><td>cat file.txt | Select-Object -First 5</td><td></td></tr>
+        <tr><td>Get-History | Select-Object -Last 10</td><td></td></tr>
+      </tbody></table>
+    </section>
+
+    <section class="help-section">
+      <h3>Variables &amp; Expressions</h3>
+      <table class="help-table"><tbody>
+        <tr><td>$x = "hello"</td>         <td>Set variable (inline)</td></tr>
+        <tr><td>Set-Variable x "hello"</td><td>Set variable (cmdlet)</td></tr>
+        <tr><td>Write-Output $x</td>       <td>Echo variable value</td></tr>
+        <tr><td>2 + 2 * 10</td>            <td>Arithmetic expression</td></tr>
+        <tr><td>Get-Variable</td>          <td>List all variables</td></tr>
+      </tbody></table>
+    </section>
+
+    <section class="help-section">
+      <h3>Keyboard Shortcuts</h3>
+      <table class="help-table"><tbody>
+        <tr><td>Enter</td>    <td>Run command</td></tr>
+        <tr><td>Tab</td>      <td>Auto-complete command/path</td></tr>
+        <tr><td>↑ / ↓</td>   <td>Navigate command history</td></tr>
+        <tr><td>Escape</td>   <td>Dismiss suggestions</td></tr>
+      </tbody></table>
+    </section>
+
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     SERVICE WORKER REGISTRATION
+═════════════════════════════════════════════ -->
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('./sw.js', { scope: './' })
+        .then(reg => {
+          console.log('[PWA] Service worker registered, scope:', reg.scope);
+          // Prompt update when a new SW is waiting
+          reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (newWorker) {
+              newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                  console.log('[PWA] New version available – reload to update.');
+                }
+              });
+            }
+          });
+        })
+        .catch(err => console.warn('[PWA] Service worker registration failed:', err));
+    });
+  }
+</script>
+
+<!-- App logic -->
+<script src="app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "name": "PowerShell To Go",
+  "short_name": "PSToGo",
+  "description": "A portable PowerShell terminal for your mobile device",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#012456",
+  "theme_color": "#012456",
+  "lang": "en",
+  "categories": ["developer", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Terminal",
+      "short_name": "Terminal",
+      "description": "Open a new PowerShell terminal",
+      "url": ".",
+      "icons": [{ "src": "icon.svg", "sizes": "any" }]
+    }
+  ]
+}
