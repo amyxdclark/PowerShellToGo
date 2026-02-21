@@ -41,7 +41,7 @@ self.addEventListener('activate', event => {
   );
 });
 
-// ── Fetch: cache-first, fallback to network ───────────────────
+// ── Fetch: stale-while-revalidate strategy ───────────────────
 self.addEventListener('fetch', event => {
   // Only handle GET requests for same-origin or precached assets
   if (event.request.method !== 'GET') return;

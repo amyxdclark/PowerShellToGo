@@ -325,7 +325,7 @@ function getBuiltinVar(name) {
   if (n === 'null')  return '';
   if (n === 'true')  return 'True';
   if (n === 'false') return 'False';
-  if (n === 'psversiontable') return 'Name:PSToGo Version:1.0';
+  if (n === 'psversiontable') return 'Name:PSToGo Version:' + APP_VERSION;
   if (n === 'env:username' || n === 'username') return 'PSUser';
   if (n === 'env:computername' || n === 'computername') return 'PSTOGO-PC';
   if (n === 'home') return 'C:\\Users\\PSUser';
@@ -1491,8 +1491,8 @@ function initUI() {
     if (confirm('Reset the virtual filesystem to defaults? This cannot be undone.')) {
       localStorage.removeItem(FS_KEY);
       vfs = {};
-      initFS();
       state.cwd = 'C:\\Users\\PSUser\\Desktop';
+      initFS();
       updatePromptLabel();
       writeLine('Filesystem reset to defaults.', 'line-success');
       closeSettings();
