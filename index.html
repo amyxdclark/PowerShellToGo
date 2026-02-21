@@ -3,7 +3,7 @@
 <head>
   <!-- ── Character Encoding & Viewport ── -->
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
   <!-- ── Primary Meta Tags ── -->
@@ -72,6 +72,9 @@
       <span class="title-text">PowerShell To Go</span>
     </div>
     <div id="header-actions">
+      <button id="btn-keyboard" class="icon-btn" title="Toggle auto-show keyboard" aria-label="Toggle auto-show keyboard">
+        ⌨️
+      </button>
       <button id="btn-clear" class="icon-btn" title="Clear screen (cls)" aria-label="Clear terminal">
         🗑️
       </button>
@@ -195,6 +198,17 @@
                class="range-input"
                min="10" max="22" step="1"
                aria-label="Font size" />
+      </div>
+
+      <div class="settings-row">
+        <div>
+          <label for="keyboard-toggle">Auto-show Keyboard</label>
+          <div class="row-desc">Automatically focus input (shows keyboard) after running commands</div>
+        </div>
+        <label class="toggle" aria-label="Toggle auto-show keyboard">
+          <input id="keyboard-toggle" type="checkbox" />
+          <span class="toggle-slider"></span>
+        </label>
       </div>
     </section>
 

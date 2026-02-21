@@ -6,23 +6,25 @@
 'use strict';
 
 // ── Constants ───────────────────────────────────────────────
-const FS_KEY       = 'pstogo_fs';
-const HIST_KEY     = 'pstogo_history';
-const SETTINGS_KEY = 'pstogo_settings';
-const APP_VERSION  = '1.0.0';
+const FS_KEY          = 'pstogo_fs';
+const HIST_KEY        = 'pstogo_history';
+const SETTINGS_KEY    = 'pstogo_settings';
+const APP_VERSION     = '1.0.0';
+const MOBILE_BP       = 640; // matches CSS breakpoint for compact prompt / desktop overrides
 
 // ── State ───────────────────────────────────────────────────
 const state = {
-  cwd:          'C:\\Users\\PSUser\\Desktop',
-  variables:    {},
-  history:      [],
-  historyIndex: -1,
-  fontSize:     13,
-  theme:        'dark',
-  soundEnabled: false,
-  suggestions:  [],
-  sugIndex:     -1,
-  pipeBuffer:   null,
+  cwd:             'C:\\Users\\PSUser\\Desktop',
+  variables:       {},
+  history:         [],
+  historyIndex:    -1,
+  fontSize:        13,
+  theme:           'dark',
+  keyboardAutoShow: true,
+  soundEnabled:    false,
+  suggestions:     [],
+  sugIndex:        -1,
+  pipeBuffer:      null,
 };
 
 // ── Virtual Filesystem ───────────────────────────────────────
@@ -175,12 +177,19 @@ function loadSettings() {
   const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
   state.theme    = s.theme    ?? 'dark';
   state.fontSize = s.fontSize ?? 13;
+  // Default: auto-show keyboard on non-touch (desktop), off on touch (mobile)
+  const touchDevice = window.matchMedia('(pointer: coarse)').matches;
+  state.keyboardAutoShow = s.keyboardAutoShow ?? !touchDevice;
   applyTheme(state.theme);
   applyFontSize(state.fontSize);
 }
 
 function saveSettings() {
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify({ theme:state.theme, fontSize:state.fontSize }));
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+    theme: state.theme,
+    fontSize: state.fontSize,
+    keyboardAutoShow: state.keyboardAutoShow,
+  }));
 }
 
 function applyTheme(theme) {
@@ -198,6 +207,14 @@ function applyFontSize(size) {
   if (sizeVal) sizeVal.textContent = state.fontSize + 'px';
   const slider = document.getElementById('font-size-slider');
   if (slider) slider.value = state.fontSize;
+}
+
+function applyKeyboardSetting(show) {
+  state.keyboardAutoShow = !!show;
+  const kbdBtn    = document.getElementById('btn-keyboard');
+  const kbdToggle = document.getElementById('keyboard-toggle');
+  if (kbdBtn)    kbdBtn.classList.toggle('active', state.keyboardAutoShow);
+  if (kbdToggle) kbdToggle.checked = state.keyboardAutoShow;
 }
 
 // ── History ─────────────────────────────────────────────────
@@ -1255,7 +1272,17 @@ let installPromptEvent = null;
 
 function updatePromptLabel() {
   const el = document.getElementById('input-prompt-label');
-  if (el) el.textContent = 'PS ' + state.cwd + ' >';
+  if (!el) return;
+  const fullPrompt = 'PS ' + state.cwd + ' >';
+  el.title = fullPrompt; // always available as a tooltip
+  // Compact form for narrow screens: show last folder only
+  if (window.innerWidth < MOBILE_BP) {
+    const parts = state.cwd.split('\\');
+    const short = parts.length > 1 ? '\u2026\\' + parts[parts.length - 1] : state.cwd;
+    el.textContent = 'PS ' + short + ' >';
+  } else {
+    el.textContent = fullPrompt;
+  }
 }
 
 function showSuggestions(items) {
@@ -1299,10 +1326,17 @@ function applyCompletion(item) {
     const lastSpace = val.lastIndexOf(' ');
     input.value = (lastSpace >= 0 ? val.slice(0, lastSpace+1) : '') + item.replace;
   }
-  input.focus();
+  input.focus(); // always focus when user explicitly chose a completion
   // move cursor to end
   const len = input.value.length;
   input.setSelectionRange(len, len);
+}
+
+/** Focus the input respecting the keyboard auto-show preference. */
+function focusInput() {
+  if (state.keyboardAutoShow) {
+    document.getElementById('cmd-input')?.focus();
+  }
 }
 
 function runInput() {
@@ -1321,7 +1355,7 @@ function runInput() {
   cmds.forEach(c => executeCommand(c));
 
   scrollToBottom();
-  setTimeout(() => input.focus(), 50);
+  setTimeout(focusInput, 50);
 }
 
 // Split on ; but not inside strings or script blocks
@@ -1464,6 +1498,12 @@ function initUI() {
     executeCommand('Clear-Host');
   });
 
+  // Keyboard toggle (header button)
+  document.getElementById('btn-keyboard')?.addEventListener('click', () => {
+    applyKeyboardSetting(!state.keyboardAutoShow);
+    saveSettings();
+  });
+
   // Settings panel
   document.getElementById('settings-close')?.addEventListener('click', closeSettings);
   document.getElementById('settings-overlay')?.addEventListener('click', e => {
@@ -1477,6 +1517,12 @@ function initUI() {
 
   document.getElementById('font-size-slider')?.addEventListener('input', e => {
     applyFontSize(parseInt(e.target.value));
+    saveSettings();
+  });
+
+  // Keyboard toggle (settings panel)
+  document.getElementById('keyboard-toggle')?.addEventListener('change', e => {
+    applyKeyboardSetting(e.target.checked);
     saveSettings();
   });
 
@@ -1540,17 +1586,26 @@ function initUI() {
     writeLine('✓ PowerShell To Go installed as a PWA!', 'line-success');
   });
 
-  // Keep terminal visible when virtual keyboard appears on mobile
+  // Keep terminal visible when virtual keyboard appears on mobile.
+  // Handles both resize (keyboard show/hide) and scroll (iOS offset drift).
   if ('visualViewport' in window) {
-    window.visualViewport.addEventListener('resize', () => {
-      document.getElementById('app').style.height = window.visualViewport.height + 'px';
-    });
+    const onViewportChange = () => {
+      const vv  = window.visualViewport;
+      const app = document.getElementById('app');
+      app.style.height = vv.height + 'px';
+      app.style.top    = vv.offsetTop + 'px';
+    };
+    window.visualViewport.addEventListener('resize', onViewportChange, { passive: true });
+    window.visualViewport.addEventListener('scroll', onViewportChange, { passive: true });
   }
 
-  // Focus input on tap anywhere in output
+  // Re-evaluate compact vs full prompt label when window is resized
+  window.addEventListener('resize', updatePromptLabel, { passive: true });
+
+  // Focus input on tap anywhere in output (only when auto-show is enabled)
   out.addEventListener('click', () => {
     const sel = window.getSelection();
-    if (!sel || sel.toString().length === 0) input.focus();
+    if (!sel || sel.toString().length === 0) focusInput();
   });
 }
 
@@ -1593,6 +1648,7 @@ function init() {
   loadHistory();
   initUI();
   updatePromptLabel();
+  applyKeyboardSetting(state.keyboardAutoShow); // sync header button & settings toggle
   showWelcome();
 
   // Run startup commands
@@ -1600,7 +1656,7 @@ function init() {
     writeLine(`PS ${state.cwd} > Get-Date`, 'line-prompt');
     CMDLETS['get-date']([], {}, null);
     writeLine('');
-    document.getElementById('cmd-input')?.focus();
+    focusInput(); // respects keyboardAutoShow
   }, 100);
 }
 
